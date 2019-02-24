@@ -9,7 +9,7 @@ app = Flask(__name__)   #buat manggil flask
 
 @app.route('/quiz', methods = ['POST'])
 def createQuiz():
-    body = (request.json)
+    body = request.json
 
     quizData = {
         "totalQuizAvailable" : 0,
@@ -39,7 +39,6 @@ def updateDeleteQuiz(quizId):
     quizData = json.load(quizFile)
 
     # nyari quiz yg mau di-update atau di-delete dl
-
     position = -1
     for i in range(len(quizData["quizzes"])) :
         if (quizData["quizzes"][i]["quiz-id"] == int(quizId)):
@@ -140,7 +139,7 @@ def getQuiz(quizId):
     questionData = json.load(questionFile)
 
     for question in questionData["questions"] :
-        question = json.loads(question)
+        # question = json.loads(question)
         if (question["quiz-id"] == int(quizId)):
             quizDataTemp["question-list"].append(question)
 
@@ -194,7 +193,7 @@ def getThatQuestion2(quizId,questionId):
     questionData = json.load(questionFile)
 
     for question in questionData["questions"] :
-        question = json.loads(question)
+        # question = json.loads(question)
         if (question["question-id"] == int(questionId) and question["quiz-id"] == int(quizId)) :
             return jsonify(question)
 
@@ -248,7 +247,7 @@ def submitAnswer():
     questionData = json.load(questionFile)
 
     for question in questionData["questions"] :
-        question = json.loads(question)
+        # question = json.loads(question)
         if (question["quiz-id"] == (body["quiz-id"]) and question["question-id"] == (body["question-id"])) : 
             for userData in tempLeaderboard:
                 if (userData["username"] == body["username"]):                    
@@ -277,7 +276,7 @@ def createGame():
     quizData = json.load(quizFile)
 
     for quiz in quizData["quizzes"]:
-        quiz = json.loads(quiz)
+        # quiz = json.loads(quiz)
         if (quiz["quiz-id"] == int(body["quiz-id"])) :
             gameInfo = quiz
 
