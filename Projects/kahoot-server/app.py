@@ -9,7 +9,7 @@ app = Flask(__name__)   #buat manggil flask
 
 @app.route('/quiz', methods = ['POST'])
 def createQuiz():
-    body = json.dumps(request.json)
+    body = (request.json)
 
     quizData = {
         "totalQuizAvailable" : 0,
@@ -32,17 +32,109 @@ def createQuiz():
     
     return jsonify(quizData)
 
+############## 23Feb2019 ###################
+@app.route('/quizzes/<quizId>', methods=["PUT", "DELETE"])
+def updateDeleteQuiz(quizId):
+    quizFile = open('./quizzes-file.json')
+    quizData = json.load(quizFile)
+
+    # nyari quiz yg mau di-update atau di-delete dl
+
+    position = -1
+    for i in range(len(quizData["quizzes"])) :
+        if (quizData["quizzes"][i]["quiz-id"] == int(quizId)):
+            position = i
+            break
+
+    if (position == -1) :
+        res = "wah mas ga ada data nya, kuis yang mana ya?"
+        return res
+    else:
+        print("yaa datanya adaa", position)
+        res = str(quizData["quizzes"][position]["quiz-id"]) + " yaaaaaa??? " + str(quizData["quizzes"][position]["quiz-title"])
+
+        # kalau data yg mau di-update atau di-delete udah ketemu, baru deh
+        # kalau PUT, berarti quiz-title sama quiz-category di file diganti jd dari yang baru dari body
+        if request.method == "PUT" :
+            body = request.json
+            print("ini bodyyy",body)
+            print("ini quizData",quizData)
+            quizData["quizzes"][position]["quiz-title"] = body["quiz-title-new"]
+            quizData["quizzes"][position]["quiz-category"] = body["quiz-category-new"]
+            print("ini Quiz Data updated", quizData)
+
+            # with open('./quizzes-file.json','w') as quizFile:
+            #     toBeWritten = str(json.dumps(quizData))
+            #     quizFile.write(toBeWritten)
+
+        elif request.method == "DELETE" :
+            print("DELLLLL")
+            del quizData["quizzes"][position]
+            quizData["totalQuizAvailable"] -= 1
+            print(quizData)
+        
+        with open('./quizzes-file.json','w') as quizFile:
+            toBeWritten = str(json.dumps(quizData))
+            quizFile.write(toBeWritten)
+
+    return res
+
+@app.route('/quizzes/<quizId>/questions/<questionId>', methods=["PUT", "DELETE"])
+def updateDeleteQuestion(quizId,questionId):
+    questionFile = open('./question-file.json')
+    questionData = json.load(questionFile)
+
+    # nyari question yang mau di-update atau di-delete
+    position = -1
+    print(questionData, "woioiajsoid")
+    print(questionData["questions"][0]["quiz-id"],"LOOOOL")
+    for i in range(len(questionData["questions"])) :
+        if (questionData["questions"][i]["quiz-id"] == int(quizId) and questionData["questions"][i]["question-id"] == int(questionId)):
+            position = i
+            break
+
+    if (position == -1) :
+        res = "ih ga ada datanya ah kak"
+        return res
+    else : 
+        print("yyyy ada nih data question nya", position)
+        res = str(questionData["questions"][position]["quiz-id"]) + " yang nomor " + str(questionData["questions"][position]["question-id"])
+
+        # kalau ketemu data nya baru dipisah antara PUT dan DELETE nyaaa
+        if request.method == "PUT" :
+            body = request.json
+            questionData["questions"][position]["question"] = body["question-new"]
+            questionData["questions"][position]["answer"] = body["answer-new"]
+            questionData["questions"][position]["options"]["A"] = body["options-new"]["A"]
+            questionData["questions"][position]["options"]["B"] = body["options-new"]["B"]
+            questionData["questions"][position]["options"]["C"] = body["options-new"]["C"]
+            questionData["questions"][position]["options"]["D"] = body["options-new"]["D"]
+
+        elif request.method == "DELETE" :
+            del questionData["questions"][position]
+
+        with open('./question-file.json','w') as questionFile:
+            toBeWritten = str(json.dumps(questionData))
+            questionFile.write(toBeWritten)
+
+    return res
+
+
+
+
+
 @app.route('/quizzes/<quizId>')
 def getQuiz(quizId):
     quizFile = open('./quizzes-file.json')
     quizData = json.load(quizFile)
 
     for quiz in quizData["quizzes"] :
-        quiz = json.loads(quiz)
+        # quiz = json.loads(quiz)
         if (quiz["quiz-id"] == int(quizId)):
             quizDataTemp = quiz
             break
 
+    
     #nyari questionnya
     questionFile = open('./question-file.json')
     questionData = json.load(questionFile)
@@ -61,7 +153,7 @@ def getQuiz(quizId):
 # dumps itu dari singlequotes ke doublequotes
 @app.route('/question', methods = ['POST']) #default method itu GET
 def createQuestion():
-    body = json.dumps(request.json)
+    body = request.json
 
     questionData = {
         "questions": []
@@ -329,11 +421,6 @@ def registerUser():
 def loginUser():
     body = request.json
 
-    if body["todo"] == "encrypt":
-        body["password"] = encrypt(body["password"])
-    elif body["todo"] == "decrypt":
-        body["password"] = decrypt(body["password"])    
-
     # ngebuka file yang udah pernah regist
     registeredUserFile = open('./registered-user-file.json')
     registeredUserData = json.load(registeredUserFile)
@@ -345,7 +432,8 @@ def loginUser():
         registeredUser = registeredUserData["registeredUsers"][i]
         if (registeredUser["username"] == body["username"]) :
             position = i
-            if (registeredUser["password"] == body["password"]) :
+            print(decrypt(registeredUser["password"]), body["password"])
+            if (decrypt(registeredUser["password"]) == body["password"]) :
                 res = "Login berhasssil"
                 break
             else:
@@ -357,24 +445,11 @@ def loginUser():
     
     return res
 
-
-# data = []
-# @app.route('/', methods=["POST"])
-# def tryAja():
-#     body = request.json
-#     data.append(body["name"])
-
-#     # return jsonify(data)
-#     if body["todo"] == "encrypt":
-#         return encrypt(body["data"])
-#     elif body["todo"] == "decrypt":
-#         return decrypt(body["data"])
-
-
+############### fungsi freelance ##########################
 defaultCaesarMove = 7
 def encrypt(string):
     caesarMove = defaultCaesarMove
-    alphabet = 'abcdefghijkhlmnopqrstuvwxyz'
+    alphabet = 'abcdefghijklmnopqrstuvwxyz'
     number = '0123456789'
     initial = alphabet+number
     listInitial = list(initial)
@@ -390,7 +465,7 @@ def encrypt(string):
 
 def decrypt(string):
     caesarMove = defaultCaesarMove
-    alphabet = 'abcdefghijkhlmnopqrstuvwxyz'
+    alphabet = 'abcdefghijklmnopqrstuvwxyz'
     number = '0123456789'
     initial = alphabet+number
     listInitial = list(initial)
