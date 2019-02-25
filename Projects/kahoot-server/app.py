@@ -56,21 +56,37 @@ def updateDeleteQuiz(quizId):
         # kalau PUT, berarti quiz-title sama quiz-category di file diganti jd dari yang baru dari body
         if request.method == "PUT" :
             body = request.json
-            print("ini bodyyy",body)
-            print("ini quizData",quizData)
             quizData["quizzes"][position]["quiz-title"] = body["quiz-title-new"]
             quizData["quizzes"][position]["quiz-category"] = body["quiz-category-new"]
-            print("ini Quiz Data updated", quizData)
 
-            # with open('./quizzes-file.json','w') as quizFile:
-            #     toBeWritten = str(json.dumps(quizData))
-            #     quizFile.write(toBeWritten)
+        elif request.method == "DELETE" :   
+            # ngehapus question di quiz ybs dl
+            questionFile = open('./question-file.json')
+            questionData = json.load(questionFile)
+            
+            # tapi ini delete nya masih ga sempurna, kalau ada question-id yang sama dia bakal nge-delete yang muncul pertama kali aja
+            lenQL = 0
+            QLInd = []
+            for question in questionData["questions"] :
+                i = questionData["questions"].index(question) #ini maksud komen di atas ku hue tp kalau question-id nya unik semua gapapa sih (kayaknya lol he he)
+                if (question["quiz-id"] == int(quizId)):
+                    lenQL += 1
+                    QLInd.append(i)
+            
+            currentDeletingIndex = 0
+            deleted = 0
+            for i in range(lenQL):
+                currentDeletingIndex = QLInd[i] - deleted
+                del questionData["questions"][currentDeletingIndex]
+                deleted += 1
 
-        elif request.method == "DELETE" :
-            print("DELLLLL")
+            with open('./question-file.json','w') as questionFile:
+                toBeWritten = str(json.dumps(questionData))
+                questionFile.write(toBeWritten)
+
+            # ngehapus quiz nya
             del quizData["quizzes"][position]
             quizData["totalQuizAvailable"] -= 1
-            print(quizData)
         
         with open('./quizzes-file.json','w') as quizFile:
             toBeWritten = str(json.dumps(quizData))
