@@ -14,14 +14,10 @@ gameFileLocation = baseLocation / "data" / "game-file.json"
 #################################################################################
 # CREATE GAME
 #################################################################################
-
 @router.route('/game', methods = ['POST'])
 def createGame():
     body = request.json
     # manggil info quiz dan generate game pin
-    # 2602
-    # quizFile = open(quizFileLocation)
-    # quizData = json.load(quizFile)
     quizData = readFile(quizFileLocation)
 
     for quiz in quizData["quizzes"]:
@@ -37,20 +33,9 @@ def createGame():
         "game-list": []
     }
     if (os.path.exists(gameFileLocation)):
-        # 2602
-        # gameFile = open(gameFileLocation, 'r')
-        # gameData = json.load(gameFile)
         gameData = readFile(gameFileLocation)
-    # else:
-        # 2602
-        # gameFile = open(gameFileLocation, 'x')
-        # gameFile = createFile(gameFileLocation)
         
     gameData["game-list"].append(gameInfo)
-    # 2602
-    # with open(gameFileLocation,'w') as gameFile:
-        # toBeWritten = str(json.dumps(gameData))
-        # gameFile.write(toBeWritten)
     toBeWritten = str(json.dumps(gameData))
     writeFile(gameFileLocation,toBeWritten)
 
@@ -64,9 +49,6 @@ def joinGame():
     body = request.json
 
     # buka game info
-    # 2602
-    # gameFile = open(gameFileLocation)
-    # gameData = json.load(gameFile)
     gameData = readFile(gameFileLocation)
 
     position = 0
@@ -89,10 +71,7 @@ def joinGame():
     
     
     gameData["game-list"][position] = gameInfo
-    # 2602
-    # with open(gameFileLocation,'w') as gameFile:
-        # toBeWritten = str(json.dumps(gameData))
-        # gameFile.write(toBeWritten)
+    toBeWritten = str(json.dumps(gameData))
     writeFile(gameFileLocation,toBeWritten)
 
     return jsonify(request.json)
@@ -107,9 +86,6 @@ def submitAnswer():
     body = request.json
 
     # ngecek jawaban sambil update skor dan leaderboard
-    # 2602
-    # gameFile = open(gameFileLocation)
-    # gameData = json.load(gameFile)
     gameData = readFile(gameFileLocation)
 
     ## nyari game mana yg lagi dimainin dan leaderboard mana yang mau diupdate
@@ -123,9 +99,6 @@ def submitAnswer():
             break
     
     ### update leaderboard
-    # 2602
-    # questionFile = open(questionFileLocation)
-    # questionData = json.load(questionFile)
     questionData = readFile(questionFileLocation)
 
     for question in questionData["questions"] :
@@ -141,11 +114,6 @@ def submitAnswer():
                     break 
 
     # \\\\\\\\\\\\\\\\\\\lg di sini update file history game  nya \\\\\\\\\\\\\\\\\\\\\\
-    # 2602
-    # with open(gameFileLocation,'w') as gameFile:
-        # gameData["game-list"][position]["leaderboard"] = tempLeaderboard
-        # toBeWritten = str(json.dumps(gameData))
-        # gameFile.write(toBeWritten)
     gameData["game-list"][position]["leaderboard"] = tempLeaderboard
     toBeWritten = str(json.dumps(gameData))
     writeFile(gameFileLocation,toBeWritten)
@@ -157,9 +125,6 @@ def submitAnswer():
 #################################################################################
 @router.route('/game/leaderboard/<gamePin>')
 def viewLeaderboard(gamePin):
-    # 2602
-    # gameFile = open(gameFileLocation)
-    # gameData = json.load(gameFile)
     gameData = readFile(gameFileLocation)
 
     res = ''

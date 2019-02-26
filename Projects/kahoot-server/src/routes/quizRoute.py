@@ -1,9 +1,11 @@
-from flask import Flask, request, json, jsonify
+from flask import Flask, request, json, jsonify, g
 import os
 from pathlib import Path
 
 from . import router, baseLocation
 from ..utils.file import readFile, createFile, writeFile
+from ..utils.authorisation import verifyLogin
+
 
 # ngambil alamat file 
 quizFileLocation = baseLocation / "data" / "quiz-file.json"
@@ -13,30 +15,23 @@ questionFileLocation = baseLocation / "data" / "question-file.json"
 # CREATE QUIZ
 #################################################################################
 @router.route('/quiz', methods = ['POST'])
+@verifyLogin
 def createQuiz():
+    username = g.username
     body = request.json
-
+    print("======IS NOW LOGGING INNNN======", g.username)
     quizData = {
         "total-quiz-available" : 0,
         "quizzes": []
     }
 
     if os.path.exists(quizFileLocation):
-        # 2602
-        # quizFile = open(quizFileLocation, 'r')
-        # quizData = json.load(quizFile)
         quizData = readFile(quizFileLocation)
-    # else:
-        # 2602
-        # quizFile = open(quizFileLocation, 'x')
-        # quizFile = createFile(quizFileLocation)
 
     quizData["quizzes"].append(body)
     quizData["total-quiz-available"] += 1
+    # quizData["quiz-creator"] = username
     toBeWritten = str(json.dumps(quizData))
-    # 2602
-    # quizFile = open(quizFileLocation,'w')
-    # quizFile.write(toBeWritten)
     writeFile(quizFileLocation,toBeWritten)
 
     return jsonify(quizData)
@@ -46,9 +41,6 @@ def createQuiz():
 #################################################################################
 @router.route('/quiz/seeAllQuizAvailable')
 def getAllQuiz():
-    # 2602
-    # quizFile = open(quizFileLocation)
-    # quizData = json.load(quizFile)
     quizData = readFile(quizFileLocation)
 
     return jsonify(quizData["quizzes"])
@@ -58,9 +50,6 @@ def getAllQuiz():
 #################################################################################
 @router.route('/quiz/<quizId>')
 def getQuiz(quizId):
-    # 2602
-    # quizFile = open(quizFileLocation)
-    # quizData = json.load(quizFile)
     quizData = readFile(quizFileLocation)
 
     # nyari kuis nya ada atau engga
@@ -80,9 +69,6 @@ def getQuiz(quizId):
                 break
         
         #nyari questionnya
-        # 2602
-        # questionFile = open(questionFileLocation)
-        # questionData = json.load(questionFile)
         questionData = readFile(questionFileLocation)
 
         for question in questionData["questions"] :
@@ -95,10 +81,9 @@ def getQuiz(quizId):
 # UPDATE DELETE QUIZ
 #################################################################################
 @router.route('/quiz/<quizId>', methods=["PUT", "DELETE"])
+@verifyLogin
 def updateDeleteQuiz(quizId):
-    # 2602
-    # quizFile = open(quizFileLocation)
-    # quizData = json.load(quizFile)
+    print("======IS NOW LOGGING INNNN======", g.username)
     quizData = readFile(quizFileLocation)
 
     # nyari quiz yg mau di-update atau di-delete dl
@@ -122,9 +107,6 @@ def updateDeleteQuiz(quizId):
 
         elif request.method == "DELETE" :   
             # ngehapus question di quiz ybs dl
-            # 2602
-            # questionFile = open(questionFileLocation)
-            # questionData = json.load(questionFile)
             questionData = readFile(questionFileLocation)
 
             # kayaknya sih ini ngedelete nya udah semua meski question-id nya sama
@@ -143,10 +125,6 @@ def updateDeleteQuiz(quizId):
                 del questionData["questions"][currentDeletingIndex]
                 deleted += 1
 
-            # 2602
-            # with open(questionFileLocation,'w') as questionFile:
-                # toBeWritten = str(json.dumps(questionData))
-                # questionFile.write(toBeWritten)
             toBeWritten = str(json.dumps(questionData))
             writeFile(questionFileLocation,toBeWritten)            
 
@@ -154,10 +132,6 @@ def updateDeleteQuiz(quizId):
             del quizData["quizzes"][position]
             quizData["total-quiz-available"] -= 1
         
-        # 2602
-        # with open(quizFileLocation,'w') as quizFile:
-            # toBeWritten = str(json.dumps(quizData))
-            # quizFile.write(toBeWritten)
         toBeWritten = str(json.dumps(quizData))
         writeFile(quizFileLocation,toBeWritten)
 

@@ -3,6 +3,7 @@ import os
 from pathlib import Path
 
 from ..utils.crypt import encrypt, decrypt
+from ..utils.authorisation import generateToken
 from ..utils.file import readFile, createFile, writeFile
 from . import router, baseLocation
 
@@ -10,6 +11,10 @@ from . import router, baseLocation
 registeredUserFileLocation = baseLocation / "data" / "registered-user-file.json"
 
 print(os.getenv("SECRET_KEY"))
+
+@router.route('/alaala')
+def alaala():
+    return "HOY"
 #####################################################################################################
 # REGISTER USER
 #####################################################################################################
@@ -27,9 +32,6 @@ def registerUser():
     }
 
     if os.path.exists(registeredUserFileLocation):
-        # 2602
-        # registeredUserFile = open(registeredUserFileLocation, 'r')
-        # registeredUserData = json.load(registeredUserFile)
         registeredUserData = readFile(registeredUserFileLocation)
 
          # cek username nya udah pernah dipake belum
@@ -46,11 +48,6 @@ def registerUser():
                 position = i
                 break
         if (position == -1):
-            # with open(registeredUserFileLocation,'w') as registeredUserFile:
-                # registeredUserData["registeredUsers"].append(body) 
-                # toBeWritten = str(json.dumps(registeredUserData))
-                # registeredUserFile.write(toBeWritten)
-            # 2602
             registeredUserData["registeredUsers"].append(body) 
             toBeWritten = str(json.dumps(registeredUserData))
             writeFile(registeredUserFileLocation,toBeWritten)
@@ -59,18 +56,9 @@ def registerUser():
         else : 
             res = res
     else:
-        # registeredUserFile = open(registeredUserFileLocation, 'x')
-        # registeredUserFile = createFile(registeredUserFileLocation)
-       
-        # with open(registeredUserFileLocation,'w') as registeredUserFile:
-        #     registeredUserData["registeredUsers"].append(body) 
-        #     toBeWritten = str(json.dumps(registeredUserData))
-        #     registeredUserFile.write(toBeWritten)
-        # 2602
         registeredUserData["registeredUsers"].append(body) 
         toBeWritten = str(json.dumps(registeredUserData))
         writeFile(registeredUserFileLocation,toBeWritten)
-
         res = jsonify(registeredUserData)
 
     return res
@@ -83,9 +71,6 @@ def loginUser():
     body = request.json
 
     # ngebuka file yang udah pernah regist
-    # 2602
-    # registeredUserFile = open(registeredUserFileLocation)
-    # registeredUserData = json.load(registeredUserFile)
     registeredUserData = readFile(registeredUserFileLocation)
 
     # nyari yang di-login udah ada di regist atau belum
@@ -97,6 +82,7 @@ def loginUser():
             if (decrypt(registeredUser["password"]) == body["password"]) :
                 body["message"] = "Login berhasssil"
                 body["status"] = True
+                body["token"] = generateToken(body["username"])
                 break
             else:
                 body["message"] = "Passwordnya salah ih"

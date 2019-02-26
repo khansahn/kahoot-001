@@ -1,9 +1,11 @@
-from flask import Flask, request, json, jsonify
+from flask import Flask, request, json, jsonify, g
 import os
 from pathlib import Path
 
 from . import router, baseLocation
 from ..utils.file import readFile, createFile, writeFile
+from ..utils.authorisation import verifyLogin
+
 
 
 # ngambil alamat file 
@@ -14,7 +16,9 @@ questionFileLocation = baseLocation / "data" / "question-file.json"
 # CREATE QUESTION
 #################################################################################
 @router.route('/question', methods = ['POST']) #default method itu GET
+@verifyLogin
 def createQuestion():
+    print("======IS NOW LOGGING INNNN======", g.username)
     body = request.json
 
     questionData = {
@@ -22,20 +26,10 @@ def createQuestion():
     }
 
     if os.path.exists(questionFileLocation):
-        # 2602
-        # questionFile = open(questionFileLocation, 'r')
-        # questionData = json.load(questionFile)
         questionData = readFile(questionFileLocation)
-    # else:
-        # 2602
-        # questionFile = open(questionFileLocation, 'x')
-        # questionFile = createFile(questionFileLocation)
 
     questionData["questions"].append(body)
     toBeWritten = str(json.dumps(questionData))
-    # 2602
-    # questionFile = open(questionFileLocation,'w')
-    # questionFile.write(toBeWritten)
     writeFile(questionFileLocation,toBeWritten)
 
     return jsonify(questionData)
@@ -45,9 +39,6 @@ def createQuestion():
 #################################################################################
 @router.route('/quiz/<quizId>/question/<questionId>')
 def getThatQuestion(quizId,questionId):
-    # 2602
-    # questionFile = open(questionFileLocation)
-    # questionData = json.load(questionFile)
     questionData = readFile(questionFileLocation)
 
     for question in questionData["questions"] :
@@ -60,10 +51,10 @@ def getThatQuestion(quizId,questionId):
 # UPDATE DELETE QUESTION
 #################################################################################
 @router.route('/quiz/<quizId>/question/<questionId>', methods=["PUT", "DELETE"])
+@verifyLogin
 def updateDeleteQuestion(quizId,questionId):
-    # 2602
-    # questionFile = open(questionFileLocation)
-    # questionData = json.load(questionFile)
+    print("======IS NOW LOGGING INNNN======", g.username)
+    
     questionData = readFile(questionFileLocation)
 
     # nyari question yang mau di-update atau di-delete
@@ -86,11 +77,8 @@ def updateDeleteQuestion(quizId,questionId):
 
         elif request.method == "DELETE" :
             del questionData["questions"][position]
+            
 
-        # 2602
-        # with open(questionFileLocation,'w') as questionFile:
-        #     toBeWritten = str(json.dumps(questionData))
-        #     questionFile.write(toBeWritten)
         toBeWritten = str(json.dumps(questionData))
         writeFile(questionFileLocation,toBeWritten)
 
