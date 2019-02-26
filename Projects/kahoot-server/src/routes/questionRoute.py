@@ -2,8 +2,9 @@ from flask import Flask, request, json, jsonify
 import os
 from pathlib import Path
 
-# from ..utils.crypt import encrypt, decrypt
 from . import router, baseLocation
+from ..utils.file import readFile, createFile, writeFile
+
 
 # ngambil alamat file 
 quizFileLocation = baseLocation / "data" / "quiz-file.json"
@@ -21,25 +22,33 @@ def createQuestion():
     }
 
     if os.path.exists(questionFileLocation):
-        questionFile = open(questionFileLocation, 'r')
-        questionData = json.load(questionFile)
-    else:
-        questionFile = open(questionFileLocation, 'x')
+        # 2602
+        # questionFile = open(questionFileLocation, 'r')
+        # questionData = json.load(questionFile)
+        questionData = readFile(questionFileLocation)
+    # else:
+        # 2602
+        # questionFile = open(questionFileLocation, 'x')
+        # questionFile = createFile(questionFileLocation)
 
     questionData["questions"].append(body)
     toBeWritten = str(json.dumps(questionData))
-    questionFile = open(questionFileLocation,'w')
-    questionFile.write(toBeWritten)
+    # 2602
+    # questionFile = open(questionFileLocation,'w')
+    # questionFile.write(toBeWritten)
+    writeFile(questionFileLocation,toBeWritten)
 
     return jsonify(questionData)
 
 #################################################################################
-# GET QUESTION IN SPECIFIC QUIZ-ID ((deprecated krn fungsinya di file quizRoute)
+# GET QUESTION IN SPECIFIC QUIZ-ID 
 #################################################################################
 @router.route('/quiz/<quizId>/question/<questionId>')
 def getThatQuestion(quizId,questionId):
-    questionFile = open(questionFileLocation)
-    questionData = json.load(questionFile)
+    # 2602
+    # questionFile = open(questionFileLocation)
+    # questionData = json.load(questionFile)
+    questionData = readFile(questionFileLocation)
 
     for question in questionData["questions"] :
         if (question["question-id"] == int(questionId) and question["quiz-id"] == int(quizId)) :
@@ -52,8 +61,10 @@ def getThatQuestion(quizId,questionId):
 #################################################################################
 @router.route('/quiz/<quizId>/question/<questionId>', methods=["PUT", "DELETE"])
 def updateDeleteQuestion(quizId,questionId):
-    questionFile = open(questionFileLocation)
-    questionData = json.load(questionFile)
+    # 2602
+    # questionFile = open(questionFileLocation)
+    # questionData = json.load(questionFile)
+    questionData = readFile(questionFileLocation)
 
     # nyari question yang mau di-update atau di-delete
     position = -1
@@ -62,7 +73,6 @@ def updateDeleteQuestion(quizId,questionId):
             position = i
             break
 
-    print("HLASJLSJAKLSJLAKSJALS", position)
     if (position == -1) :
         res = "ih ga ada datanya ah kak"
         return res
@@ -77,9 +87,12 @@ def updateDeleteQuestion(quizId,questionId):
         elif request.method == "DELETE" :
             del questionData["questions"][position]
 
-        with open(questionFileLocation,'w') as questionFile:
-            toBeWritten = str(json.dumps(questionData))
-            questionFile.write(toBeWritten)
+        # 2602
+        # with open(questionFileLocation,'w') as questionFile:
+        #     toBeWritten = str(json.dumps(questionData))
+        #     questionFile.write(toBeWritten)
+        toBeWritten = str(json.dumps(questionData))
+        writeFile(questionFileLocation,toBeWritten)
 
     return res
 

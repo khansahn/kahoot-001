@@ -2,8 +2,8 @@ from flask import Flask, request, json, jsonify
 import os
 from pathlib import Path
 
-# from ..utils.crypt import encrypt, decrypt
 from . import router, baseLocation
+from ..utils.file import readFile, createFile, writeFile
 
 # ngambil alamat file 
 quizFileLocation = baseLocation / "data" / "quiz-file.json"
@@ -22,17 +22,23 @@ def createQuiz():
     }
 
     if os.path.exists(quizFileLocation):
-        quizFile = open(quizFileLocation, 'r')
-        quizData = json.load(quizFile)
-    else:
-        quizFile = open(quizFileLocation, 'x')
+        # 2602
+        # quizFile = open(quizFileLocation, 'r')
+        # quizData = json.load(quizFile)
+        quizData = readFile(quizFileLocation)
+    # else:
+        # 2602
+        # quizFile = open(quizFileLocation, 'x')
+        # quizFile = createFile(quizFileLocation)
 
     quizData["quizzes"].append(body)
     quizData["total-quiz-available"] += 1
     toBeWritten = str(json.dumps(quizData))
-    quizFile = open(quizFileLocation,'w')
-    quizFile.write(toBeWritten)
-    
+    # 2602
+    # quizFile = open(quizFileLocation,'w')
+    # quizFile.write(toBeWritten)
+    writeFile(quizFileLocation,toBeWritten)
+
     return jsonify(quizData)
 
 #################################################################################
@@ -40,8 +46,10 @@ def createQuiz():
 #################################################################################
 @router.route('/quiz/seeAllQuizAvailable')
 def getAllQuiz():
-    quizFile = open(quizFileLocation)
-    quizData = json.load(quizFile)
+    # 2602
+    # quizFile = open(quizFileLocation)
+    # quizData = json.load(quizFile)
+    quizData = readFile(quizFileLocation)
 
     return jsonify(quizData["quizzes"])
 
@@ -50,8 +58,10 @@ def getAllQuiz():
 #################################################################################
 @router.route('/quiz/<quizId>')
 def getQuiz(quizId):
-    quizFile = open(quizFileLocation)
-    quizData = json.load(quizFile)
+    # 2602
+    # quizFile = open(quizFileLocation)
+    # quizData = json.load(quizFile)
+    quizData = readFile(quizFileLocation)
 
     # nyari kuis nya ada atau engga
     position = -1
@@ -65,17 +75,17 @@ def getQuiz(quizId):
     else:
 
         for quiz in quizData["quizzes"] :
-            # quiz = json.loads(quiz)
             if (quiz["quiz-id"] == int(quizId)):
                 quizDataTemp = quiz
                 break
         
         #nyari questionnya
-        questionFile = open(questionFileLocation)
-        questionData = json.load(questionFile)
+        # 2602
+        # questionFile = open(questionFileLocation)
+        # questionData = json.load(questionFile)
+        questionData = readFile(questionFileLocation)
 
         for question in questionData["questions"] :
-            # question = json.loads(question)
             if (question["quiz-id"] == int(quizId)):
                 quizDataTemp["question-list"].append(question)
 
@@ -86,8 +96,10 @@ def getQuiz(quizId):
 #################################################################################
 @router.route('/quiz/<quizId>', methods=["PUT", "DELETE"])
 def updateDeleteQuiz(quizId):
-    quizFile = open(quizFileLocation)
-    quizData = json.load(quizFile)
+    # 2602
+    # quizFile = open(quizFileLocation)
+    # quizData = json.load(quizFile)
+    quizData = readFile(quizFileLocation)
 
     # nyari quiz yg mau di-update atau di-delete dl
     position = -1
@@ -110,14 +122,16 @@ def updateDeleteQuiz(quizId):
 
         elif request.method == "DELETE" :   
             # ngehapus question di quiz ybs dl
-            questionFile = open(questionFileLocation)
-            questionData = json.load(questionFile)
-            
-            # tapi ini delete nya masih ga sempurna, kalau ada question-id yang sama dia bakal nge-delete yang muncul pertama kali aja
+            # 2602
+            # questionFile = open(questionFileLocation)
+            # questionData = json.load(questionFile)
+            questionData = readFile(questionFileLocation)
+
+            # kayaknya sih ini ngedelete nya udah semua meski question-id nya sama
             lenQL = 0
             QLInd = []
             for question in questionData["questions"] :
-                i = questionData["questions"].index(question) #ini maksud komen di atas ku hue tp kalau question-id nya unik semua gapapa sih (kayaknya lol he he)
+                i = questionData["questions"].index(question) 
                 if (question["quiz-id"] == int(quizId)):
                     lenQL += 1
                     QLInd.append(i)
@@ -129,16 +143,22 @@ def updateDeleteQuiz(quizId):
                 del questionData["questions"][currentDeletingIndex]
                 deleted += 1
 
-            with open(questionFileLocation,'w') as questionFile:
-                toBeWritten = str(json.dumps(questionData))
-                questionFile.write(toBeWritten)
+            # 2602
+            # with open(questionFileLocation,'w') as questionFile:
+                # toBeWritten = str(json.dumps(questionData))
+                # questionFile.write(toBeWritten)
+            toBeWritten = str(json.dumps(questionData))
+            writeFile(questionFileLocation,toBeWritten)            
 
             # ngehapus quiz nya
             del quizData["quizzes"][position]
             quizData["total-quiz-available"] -= 1
         
-        with open(quizFileLocation,'w') as quizFile:
-            toBeWritten = str(json.dumps(quizData))
-            quizFile.write(toBeWritten)
+        # 2602
+        # with open(quizFileLocation,'w') as quizFile:
+            # toBeWritten = str(json.dumps(quizData))
+            # quizFile.write(toBeWritten)
+        toBeWritten = str(json.dumps(quizData))
+        writeFile(quizFileLocation,toBeWritten)
 
     return res
